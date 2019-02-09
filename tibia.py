@@ -73,4 +73,4 @@ for credential in credentials:
 
     if cookie != None:
         saveCredntialResultToFile(credential,"results.txt")
-    
+    browser.quit()    
