@@ -44,30 +44,23 @@ browser = None
 credentials = getCredentialsFromFile()
 
 for credential in credentials:
-    try:
-        if(isProxy):
-            browser = webdriver.Chrome(options=chrome_options)
-        else:
-            browser = webdriver.Chrome()
+    if(isProxy):
+        browser = webdriver.Chrome(options=chrome_options)
+    else:
+        browser = webdriver.Chrome()
 
-        usernameStr = credential.username
-        passwordStr = credential.password
+    usernameStr = credential.username
+    passwordStr = credential.password
 
-        browser.get(('https://www.tibia.com/account/?subtopic=accountmanagement'))
+    browser.get(('https://www.tibia.com/account/?subtopic=accountmanagement'))
 
-        username = WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.NAME, 'loginname')))
-        username.send_keys(usernameStr)
-        password = WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.NAME, 'loginpassword')))
-        password.send_keys(passwordStr)
-        current_url = browser.current_url
-        signInButton = WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.NAME, 'Login')))
+    username = WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.NAME, 'loginname')))
+    username.send_keys(usernameStr)
+    password = WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.NAME, 'loginpassword')))
+    password.send_keys(passwordStr)
+    current_url = browser.current_url
+    signInButton = WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.NAME, 'Login')))
+ 
+    current_url = browser.current_url
 
-        current_url = browser.current_url
-
-        signInButton.submit()
-    except:
-        saveCredntialResultToFile(credential,"exceptions.txt")
-    finally:
-        browser.quit()
-        
-
+    #signInButton.click()
