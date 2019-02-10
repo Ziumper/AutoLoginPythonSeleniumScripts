@@ -72,6 +72,6 @@ for credential in credentials:
 
     if current_url == 'https://pl.metin2.gameforge.com/captcha' or  'https://pl.metin2.gameforge.com/main/index?__token=' in current_url:
         saveCredntialResultToFile(credential,"results.txt")
-
+    browser.quit()
         
 
