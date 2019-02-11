@@ -68,7 +68,9 @@ for credential in credentials:
     if current_url == 'https://pl.metin2.gameforge.com': 
         signInButton = WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.ID, 'submitBtnRight')))
         signInButton.submit()
-        current_url = browser.current_url
+       
+    WebDriverWait(browser,15).until(EC.url_changes(current_url))
+    current_url = browser.current_url
 
     if current_url == 'https://pl.metin2.gameforge.com/captcha' or  'https://pl.metin2.gameforge.com/main/index?__token=' in current_url:
         saveCredntialResultToFile(credential,"results.txt")
