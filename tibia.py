@@ -95,6 +95,7 @@ def checkErrorMessage(browser,credential):
 def getUpBrowser(proxyId,proxyList,timeout):
     if(proxyId >= 0):
         proxy = proxyList[proxyId]
+        print('Going with proxy: '+ proxy)
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument('--proxy-server=%s' % proxy)
         browser = webdriver.Chrome(options=chrome_options)
