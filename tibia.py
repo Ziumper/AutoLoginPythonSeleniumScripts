@@ -115,11 +115,12 @@ def loginWithCredential(credential,timeout,proxyId,proxyList):
 
     browser = getUpBrowser(proxyId,proxyList,timeout)
     loginResult = loginToTibiaAccount(credential,browser)
-    errorMessage = checkErrorMessage(browser,credential)
-
+    
     #not succesful login lets try with proxy on failure
     if(not loginResult.result):
            return goWithNextProxy(browser,proxyId,credential,timeout,proxyList)
+
+    errorMessage = checkErrorMessage(browser,credential)
 
     #when error message found and it is block ip error go with proxy
     if(errorMessage.result):
