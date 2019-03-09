@@ -144,10 +144,7 @@ def loginWithCredential(credential,timeout,proxyId,proxyList):
     
     return ResultMessage(credential,False,'',proxyId)
 
-def checkIsLoginSuccesfully(browser,loginResult,errorMessage,credential): 
-      #succesful login without exception and eeror message not found
-    print(errorMessage.result)
-    print(loginResult.result)
+def checkIsLoginSuccesfully(browser,loginResult,errorMessage,credential):
     if(loginResult.result and errorMessage.result):
         print('Trying to get cookei for ' + credential.username)
         cookie = browser.get_cookie('SecureSessionID')
@@ -157,6 +154,7 @@ def checkIsLoginSuccesfully(browser,loginResult,errorMessage,credential):
             browser.quit()
         else:
             #no cookie so , just get out of here and clsoe!
+            print('cookie not found, user not logged')
             browser.quit()
     else:
         #nothing spectaculary happened just wrong credentials
