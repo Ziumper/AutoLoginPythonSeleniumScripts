@@ -2,7 +2,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException,NoSuchElementException
+import time
 
 
 class Credential:
@@ -17,6 +18,14 @@ class ResultMessage:
         self.message = message
         self.proxyId = proxyId
     
+def wait(min):
+    mins = 0
+    while(mins != min):
+          print(">>>>>>>>>>>>>>>>>>>>>", mins)
+          time.sleep(60)
+          mins += 1
+
+
 
 
 def getProxyListFromFile():
@@ -86,11 +95,15 @@ def checkErrorMessage(browser,credential):
         if ipBlockText in errorText:
             print("Block ip error")
             return ResultMessage(credential,True,'Block ip error')
+    except NoSuchElementException:
+        print('No Error message!')
+        resolveException('No error message, NoSuchElementException',credential)
+        return ResultMessage(credential,True,'No error')
     except:
         print("Error message not found")
         resolveException('Error message not found',credential)
         return ResultMessage(credential,False,'Error message not found')
-    return ResultMessage(credential,True,'Error message found')
+    return ResultMessage(credential,True,'No errors!')
 
 def getUpBrowser(proxyId,proxyList,timeout):
     if(proxyId >= 0):
@@ -133,7 +146,10 @@ def loginWithCredential(credential,timeout,proxyId,proxyList):
 
 def checkIsLoginSuccesfully(browser,loginResult,errorMessage,credential): 
       #succesful login without exception and eeror message not found
-    if(loginResult.result and not errorMessage.result):
+    print(errorMessage.result)
+    print(loginResult.result)
+    if(loginResult.result and errorMessage.result):
+        print('Trying to get cookei for ' + credential.username)
         cookie = browser.get_cookie('SecureSessionID')
         if cookie != None:
             print("Cookie found, logged succesfuly with credentials:" + credential.username + ":" + credential.password)
@@ -144,6 +160,7 @@ def checkIsLoginSuccesfully(browser,loginResult,errorMessage,credential):
             browser.quit()
     else:
         #nothing spectaculary happened just wrong credentials
+        print(errorMessage.message)
         browser.quit()
 
 def goWithNextProxy(browser,proxyId,credential,timeout,proxyList):
